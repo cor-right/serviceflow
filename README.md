@@ -1,6 +1,9 @@
 # serviceflow
 
-## 项目结构
+## serviceflow/serviceflow
+
+该项目是引擎本体，是java项目，使用时通过jar包 的方式进行使用。
+目前引擎只提供与Spring 框架生命周期结合的使用方式，需要在 spring配置文件上进行配置。
 
 * serviceflow
 	* src
