@@ -17,7 +17,4 @@ import java.lang.annotation.*;
 @Target(ElementType.FIELD)
 @Documented
 public @interface In {
-
-
-
 }
