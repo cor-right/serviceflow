@@ -5,10 +5,15 @@
 
 package me.jiaxu.serviceflow.annotation;
 
+import java.lang.annotation.*;
+
 /**
  * Created by jiaxu.zjx on 2019/2/8
  * Description:
  *     该注解标识微服务工作流的出参，一个工作流只会有一个出参。
  */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.FIELD)
+@Documented
 public @interface Out {
 }
