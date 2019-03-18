@@ -1,6 +1,5 @@
 package me.jiaxu.serviceflow;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -15,8 +14,6 @@ public interface FlowOrderManager {
      *
      * @return
      */
-    default List<String> serviceUnitsOrderList() {
-        return new ArrayList<>();
-    }
+    List<String> serviceUnitsOrderList();
 
 }

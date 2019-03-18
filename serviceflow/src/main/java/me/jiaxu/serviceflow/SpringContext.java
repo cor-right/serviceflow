@@ -1,9 +1,9 @@
-package me.jiaxu.serviceflow.common.util;
+package me.jiaxu.serviceflow;
 
-import me.jiaxu.serviceflow.ServiceUnit;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
@@ -12,9 +12,11 @@ import java.util.Map;
  * Description:
  *     spring 上下文工具类
  */
-public class SpringContextUtils implements ApplicationContextAware {
+@Component
+public class SpringContext implements ApplicationContextAware {
 
-    private static ApplicationContext applicationContext;
+    private ApplicationContext applicationContext;
+
 
     /**
      * 获取指定的 bean
@@ -25,7 +27,7 @@ public class SpringContextUtils implements ApplicationContextAware {
      * @param type 接口类型
      * @return bean
      */
-    public static <T> T getBean(String name, Class<T> type) {
+    public <T> T getBean(String name, Class<T> type) {
         try {
             return type.cast(
                     applicationContext.getBean(name));
@@ -40,7 +42,7 @@ public class SpringContextUtils implements ApplicationContextAware {
      * @param name
      * @return
      */
-    public static ServiceUnit getServiceUnit(String name) {
+    public ServiceUnit getServiceUnit(String name) {
         return getBean(name, ServiceUnit.class);
     }
 
@@ -53,13 +55,13 @@ public class SpringContextUtils implements ApplicationContextAware {
      * @param <T>  接口类型
      * @return
      */
-    public static <T> Map<String, T> getBeansForType(Class<T> type) {
+    public <T> Map<String, T> getBeansForType(Class<T> type) {
         return applicationContext.getBeansOfType(type);
     }
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        SpringContextUtils.applicationContext = applicationContext;
+        this.applicationContext = applicationContext;
     }
 
 }

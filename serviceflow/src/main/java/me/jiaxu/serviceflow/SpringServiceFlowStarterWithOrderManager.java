@@ -11,9 +11,9 @@ import me.jiaxu.serviceflow.model.exception.ServiceFlowEngineStartException;
 import me.jiaxu.serviceflow.common.ExceptionEnum;
 import me.jiaxu.serviceflow.common.constant.LoggerConstants;
 import me.jiaxu.serviceflow.common.util.LoggerUtils;
-import me.jiaxu.serviceflow.common.util.SpringContextUtils;
 import me.jiaxu.serviceflow.model.DecorateField;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.lang.annotation.Annotation;
@@ -38,6 +38,10 @@ public class SpringServiceFlowStarterWithOrderManager<T, R>
     /** 异常处理器 */
     private ExceptionHandler    exceptionHandler;
 
+    /** application context */
+    @Autowired
+    private SpringContext springContext;
+
     /** request */
     private T request;
 
@@ -50,21 +54,21 @@ public class SpringServiceFlowStarterWithOrderManager<T, R>
     private Map<String, DecorateField> publishMap = new HashMap<>();
 
     @Override
-    public R apply(T request, String managerName) throws Exception {
+    public R apply(T request, FlowOrderManager manager) throws Exception {
         long startTime = new Date().getTime();
         this.request = request;
 
         try {
             // 获取工作流程和工作单元
-            FlowOrderManager manager = allFlowOrderManagerMap.get(managerName);
             if (manager == null) {
                 throw new ServiceFlowEngineRuntimeException(ExceptionEnum.MISSED_FLOW_ORDER_MANAGER);
             }
 
             // 配置工作流程
+
             List<ServiceUnit> serviceUnits = manager.serviceUnitsOrderList()
                     .stream()
-                    .map(SpringContextUtils::getServiceUnit)
+                    .map(springContext::getServiceUnit)
                     .collect(Collectors.toList());
             Map<String, ServiceUnit> serviceUnitsMap = serviceUnits
                     .stream()
@@ -85,7 +89,7 @@ public class SpringServiceFlowStarterWithOrderManager<T, R>
 
         } catch (ServiceFlowEngineRuntimeException sre) {
             // 非用户定义的 workunit 异常
-            LoggerUtils.error(LoggerConstants.ENGINE_RUN_LOGGER, sre.getErrorEnum());
+            LoggerUtils.error(LoggerConstants.ENGINE_RUN_LOGGER, sre);
 
         } catch (Exception e) {
             // 用户定义的 workunit 的异常，优先用 exceptioHandler 处理，否则直接 throw
@@ -114,7 +118,7 @@ public class SpringServiceFlowStarterWithOrderManager<T, R>
 
         try {
             // 获取所有工作流流程定义
-            Map<String, FlowOrderManager> beansForType = SpringContextUtils.getBeansForType(FlowOrderManager.class);
+            Map<String, FlowOrderManager> beansForType = springContext.getBeansForType(FlowOrderManager.class);
             if (CollectionUtils.isEmpty(beansForType)) {
                 throw new ServiceFlowEngineStartException(ExceptionEnum.NO_FLOW_ORDER_MANAGER_DEFINED);
             }
@@ -130,7 +134,7 @@ public class SpringServiceFlowStarterWithOrderManager<T, R>
 
                 // 获取 bean
                 List<ServiceUnit> unitList = flow.serviceUnitsOrderList().stream()
-                        .map(SpringContextUtils::getServiceUnit)
+                        .map(springContext::getServiceUnit)
                         .collect(Collectors.toList());
 
                 // 存在 Null 元素证明有bean 获取不成功
@@ -145,38 +149,55 @@ public class SpringServiceFlowStarterWithOrderManager<T, R>
                 for (ServiceUnit unit : unitList) {
                     Field[] fields = unit.getClass().getDeclaredFields();
 
+                    if (fields.length == 0) {
+                        LoggerUtils.debug(LoggerConstants.ENGINE_START_LOGGER,
+                                "流程 %s 中服务单元 %50s 校验通过，该单元中不存在成员变量",
+                                flow.getClass().getName(), unit.getClass().getName());
+                        continue;
+                    }
+
                     for (Field field : fields) {
                         field.setAccessible(true);
                         Annotation[] annotations = field.getDeclaredAnnotations();
 
                         // 校验：同一 workunit 的 filed 中只允许有一个serviceflow 提供的注解( @In / @Out / @Subscribe / @Publish )
-                        long annotationCount = Arrays.stream(annotations).filter(annotation
+                        List<Annotation> annotationList = Arrays.stream(annotations).filter(annotation
                                 -> annotation instanceof Subscribe
                                 || annotation instanceof Publish
                                 || annotation instanceof In
-                                || annotation instanceof Out).count();
-                        if (annotationCount > 1) {
+                                || annotation instanceof Out).collect(Collectors.toList());
+                        if (annotationList.size() > 1) {
                             throw new ServiceFlowEngineStartException(ExceptionEnum.TOO_MUCH_DECLARED_ANNOTATIONS);
                         }
+                        if (annotationList.size() == 0) {
+                            LoggerUtils.debug(LoggerConstants.ENGINE_START_LOGGER,
+                                    "流程 %s 中服务单元 %50s 校验通过，该单元中不存在需要检查的成员变量",
+                                    flow.getClass().getName(), unit.getClass().getName());
+                            continue;
+                        }
+                        Annotation annotation = annotationList.get(0);
 
                         // 校验：被 @Subscribe 的 field 必须已经 @Publish
-                        if (ArrayUtils.contains(annotations, Subscribe.class)
+                        if (annotation instanceof Subscribe
                                 && !CollectionUtils.contains(publishedFiled, field.get(unit))) {
                             throw new ServiceFlowEngineStartException(ExceptionEnum.SUBSCRIBE_BEFORE_PUBLISH);
                         }
 
-                        if (ArrayUtils.contains(annotations, Publish.class)) {
+                        if (annotation instanceof Publish) {
                             publishedFiled.add(field.get(unit));
                         }
 
                         // 校验：@Out 在同一 flow 中最多一个
-                        if (ArrayUtils.contains(annotations, Out.class)) {
+                        if (annotation instanceof Out) {
                             if (containsOut) {
                                 throw new ServiceFlowEngineStartException(ExceptionEnum.DUPLICATE_OUT);
                             } else {
                                 containsOut = true;
                             }
                         }
+
+                        LoggerUtils.debug(LoggerConstants.ENGINE_START_LOGGER,
+                                "流程 %s 中服务单元 %50s 校验通过.", flow.getClass().getName(), unit.getClass().getName());
                     }
                 }
 
@@ -193,10 +214,12 @@ public class SpringServiceFlowStarterWithOrderManager<T, R>
             }
 
         } catch (ServiceFlowEngineStartException ese) {
-            LoggerUtils.error(LoggerConstants.ENGINE_START_LOGGER, ese.getErrorEnum());
+            LoggerUtils.error(LoggerConstants.ENGINE_START_LOGGER, ese);
 
         } catch(Exception e) {
-            LoggerUtils.error(LoggerConstants.ENGINE_START_LOGGER, ExceptionEnum.DEFAULT_ERROR);
+            e.printStackTrace();
+            LoggerUtils.error(LoggerConstants.ENGINE_START_LOGGER,
+                    new ServiceFlowEngineStartException(ExceptionEnum.DEFAULT_ERROR));
         }
 
         LoggerUtils.debug(LoggerConstants.ENGINE_START_LOGGER, "引擎初始化校验成功.");

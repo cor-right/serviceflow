@@ -12,4 +12,6 @@ public class LoggerConstants {
     /** 引擎运行日志 */
     public static final String ENGINE_RUN_LOGGER = "serviceFlowEngine";
 
+    public static final String DEFAULT_ERROR = "defaultError";
+
 }

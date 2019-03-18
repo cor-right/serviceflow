@@ -35,10 +35,10 @@ public interface ServiceFlowStarter<T, R> {
      * 启动方法
      *
      * @param t 请求入参
-     * @param managerName 工作流流程定义实现类
+     * @param manager 工作流流程定义实现类
      * @return response
      */
-    default R apply(T t, String managerName) throws Exception {
+    default R apply(T t, FlowOrderManager manager) throws Exception {
         return null;
     }
 

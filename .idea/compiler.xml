@@ -12,9 +12,14 @@
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="serviceflow" target="8" />
-      <module name="serviceflow_demo" target="1.5" />
+      <module name="serviceflow_demo" target="8" />
       <module name="serviceflowdemo" target="8" />
       <module name="serviceflowgenerator" target="8" />
     </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="serviceflow_demo" options="-parameters" />
+    </option>
   </component>
 </project>

@@ -1,6 +1,9 @@
 package me.jiaxu.serviceflow.common.util;
 
 import me.jiaxu.serviceflow.common.ExceptionEnum;
+import me.jiaxu.serviceflow.common.constant.LoggerConstants;
+import me.jiaxu.serviceflow.model.exception.ServiceFlowEngineRuntimeException;
+import me.jiaxu.serviceflow.model.exception.ServiceFlowEngineStartException;
 import org.apache.log4j.Logger;
 
 
@@ -76,17 +79,61 @@ public class LoggerUtils {
         logger.error(formattedMessage);
     }
 
-    public static void error(String loggerName, ExceptionEnum exception) {
+    public static void error(String loggerName, ServiceFlowEngineStartException exception) {
         Logger logger = Logger.getLogger(loggerName);
+        Logger defaultError = Logger.getLogger(LoggerConstants.DEFAULT_ERROR);
 
-        String formattedMessage = exception.getDesc();
+        String formattedMessage = exception.getErrorDesc();
         logger.error(formattedMessage);
+
+        defaultError.error(formattedMessage);
+        defaultError.error(exception.getMessage());
+        for (StackTraceElement stackTraceElement : exception.getStackTrace()) {
+            defaultError.error(stackTraceElement.toString());
+        }
+
     }
 
-    public static void error(String loggerName, ExceptionEnum exception, Object... param) {
+    public static void error(String loggerName, ServiceFlowEngineStartException exception, Object... param) {
         Logger logger = Logger.getLogger(loggerName);
+        Logger defaultError = Logger.getLogger(LoggerConstants.DEFAULT_ERROR);
 
-        String formattedMessage = String.format(exception.getDesc(), param);
+        String formattedMessage = String.format(exception.getErrorDesc(), param);
         logger.error(formattedMessage);
+
+        defaultError.error(formattedMessage);
+        defaultError.error(exception.getMessage());
+        for (StackTraceElement stackTraceElement : exception.getStackTrace()) {
+            defaultError.error(stackTraceElement.toString());
+        }
+    }
+
+    public static void error(String loggerName, ServiceFlowEngineRuntimeException exception) {
+        Logger logger = Logger.getLogger(loggerName);
+        Logger defaultError = Logger.getLogger(LoggerConstants.DEFAULT_ERROR);
+
+        String formattedMessage = exception.getErrorDesc();
+        logger.error(formattedMessage);
+
+        defaultError.error(formattedMessage);
+        for (StackTraceElement stackTraceElement : exception.getStackTrace()) {
+            defaultError.error(stackTraceElement.toString());
+        }
+
+
+
+    }
+
+    public static void error(String loggerName, ServiceFlowEngineRuntimeException exception, Object... param) {
+        Logger logger = Logger.getLogger(loggerName);
+        Logger defaultError = Logger.getLogger(LoggerConstants.DEFAULT_ERROR);
+
+        String formattedMessage = String.format(exception.getErrorDesc(), param);
+        logger.error(formattedMessage);
+
+        defaultError.error(formattedMessage);
+        for (StackTraceElement stackTraceElement : exception.getStackTrace()) {
+            defaultError.error(stackTraceElement.toString());
+        }
     }
 }

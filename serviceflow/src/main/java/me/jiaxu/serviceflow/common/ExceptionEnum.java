@@ -10,8 +10,6 @@ public enum ExceptionEnum {
     /** 默认异常 */
     DEFAULT_ERROR("defaultError", "微服务流引擎异常"),
 
-
-
     // ------ 流程异常 ------
 
     /** 空流程 */
