@@ -4,6 +4,8 @@ import me.jiaxu.demo.model.BaseResponse;
 import me.jiaxu.demo.model.PaymentModel;
 import me.jiaxu.serviceflow.ServiceUnit;
 import me.jiaxu.serviceflow.annotation.Out;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 /**
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Service;
  * Description:
  */
 @Service(value = "me.jiaxu.demo.biz.payment.RenderResponse")
+//@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class RenderResponse implements ServiceUnit {
 
     @Out

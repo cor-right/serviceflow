@@ -1,8 +1,12 @@
 package me.jiaxu.serviceflow;
 
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -58,6 +62,24 @@ public class SpringContext implements ApplicationContextAware {
     public <T> Map<String, T> getBeansForType(Class<T> type) {
         return applicationContext.getBeansOfType(type);
     }
+
+    public void registryBean(String name) {
+        // 获得 factory
+        ConfigurableApplicationContext configContext = (ConfigurableApplicationContext)applicationContext;
+        DefaultListableBeanFactory listableFactory = (DefaultListableBeanFactory) configContext.getBeanFactory();
+
+        // 构建 bean, TODO: 实现自动注册
+        Class<?> type = Class.forName(name);
+        BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(name);
+        builder.addPropertyReference("userService", "userService");
+
+
+
+
+        // 注册 bean
+        listableFactory.registerBeanDefinition();
+    }
+
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
