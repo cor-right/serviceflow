@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="serviceflow_demo" />
+        <module name="serviceflowgenerator" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="serviceflow" target="8" />
+      <module name="serviceflow_demo" target="8" />
+      <module name="serviceflowdemo" target="8" />
+      <module name="serviceflowgenerator" target="8" />
+    </bytecodeTargetLevel>
+  </component>
+</project>
