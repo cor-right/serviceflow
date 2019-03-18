@@ -12,7 +12,7 @@
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="serviceflow" target="8" />
-      <module name="serviceflow_demo" target="8" />
+      <module name="serviceflow_demo" target="1.5" />
       <module name="serviceflowdemo" target="8" />
       <module name="serviceflowgenerator" target="8" />
     </bytecodeTargetLevel>
