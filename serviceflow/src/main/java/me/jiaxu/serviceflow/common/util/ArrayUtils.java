@@ -9,6 +9,10 @@ import java.util.Arrays;
  */
 public class ArrayUtils {
 
+    public static Boolean isEmpty(Object[] array) {
+        return array == null || array.length == 0;
+    }
+
     /**
      * 判定包含关系
      *
@@ -22,5 +26,7 @@ public class ArrayUtils {
         }
         return Arrays.asList(array).contains(elem);
     }
+
+
 
 }

@@ -23,6 +23,7 @@
 
 
     <dependencies>
+
         <!-- org.apache -->
         <dependency>
             <groupId>commons-lang</groupId>
@@ -34,6 +35,7 @@
             <artifactId>commons-collections</artifactId>
             <version>3.0</version>
         </dependency>
+
         <!-- spring -->
         <dependency>
             <groupId>org.springframework</groupId>
@@ -47,12 +49,15 @@
             <version>RELEASE</version>
             <scope>compile</scope>
         </dependency>
+
         <!-- 日志 -->
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
             <version>1.2.13</version>
         </dependency>
+
+
         <!-- lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -60,6 +65,9 @@
             <version>1.16.20</version>
             <scope>provided</scope>
         </dependency>
+
+
+
     </dependencies>
 
 </project>

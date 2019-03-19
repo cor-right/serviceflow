@@ -1,10 +1,13 @@
 package me.jiaxu.serviceflow.common.util;
 
-import me.jiaxu.serviceflow.common.ExceptionEnum;
 import me.jiaxu.serviceflow.common.constant.LoggerConstants;
+import me.jiaxu.serviceflow.model.exception.ServiceFlowEngineCommonException;
 import me.jiaxu.serviceflow.model.exception.ServiceFlowEngineRuntimeException;
 import me.jiaxu.serviceflow.model.exception.ServiceFlowEngineStartException;
 import org.apache.log4j.Logger;
+
+import java.text.DateFormat;
+import java.util.Date;
 
 
 /**
@@ -14,7 +17,9 @@ import org.apache.log4j.Logger;
  */
 public class LoggerUtils {
 
-    private static final String DEBUG_PREFIX = "[SERVICE FLOW ENGINE]: ";
+    /** debug 日志前缀 */
+    private static final String DEBUG_PREFIX
+            = DateFormat.getDateTimeInstance().format(new Date()) + "[SERVICE FLOW ENGINE]: ";
 
     // info
 
@@ -80,6 +85,22 @@ public class LoggerUtils {
     }
 
     public static void error(String loggerName, ServiceFlowEngineStartException exception) {
+        Logger logger = Logger.getLogger(loggerName);
+        Logger defaultError = Logger.getLogger(LoggerConstants.DEFAULT_ERROR);
+
+        String formattedMessage = exception.getErrorDesc();
+        logger.error(formattedMessage);
+
+        defaultError.error(formattedMessage);
+        defaultError.error(exception.getMessage());
+        for (StackTraceElement stackTraceElement : exception.getStackTrace()) {
+            defaultError.error(stackTraceElement.toString());
+        }
+
+    }
+
+
+    public static void error(String loggerName, ServiceFlowEngineCommonException exception) {
         Logger logger = Logger.getLogger(loggerName);
         Logger defaultError = Logger.getLogger(LoggerConstants.DEFAULT_ERROR);
 

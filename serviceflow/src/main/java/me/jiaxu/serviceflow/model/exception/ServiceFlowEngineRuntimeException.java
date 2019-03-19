@@ -1,6 +1,6 @@
 package me.jiaxu.serviceflow.model.exception;
 
-import me.jiaxu.serviceflow.common.ExceptionEnum;
+import me.jiaxu.serviceflow.common.enums.ExceptionEnum;
 
 /**
  * Created by jiaxu.zjx on 2019/3/18

@@ -1,4 +1,4 @@
-package me.jiaxu.serviceflow.common;
+package me.jiaxu.serviceflow.common.enums;
 
 /**
  * Created by jiaxu.zjx on 2019/2/8
@@ -41,6 +41,11 @@ public enum ExceptionEnum {
     /** SubScribe 在 Publish 之前被执行 */
     SUBSCRIBE_BEFORE_PUBLISH("subscribeBeforePublish", "被订阅的元素尚未进行发布"),
 
+
+    // 自动注册异常
+
+    CLASS_NOT_FOUND("classNotFound", "被加载的类没有找到"),
+
     ;
 
 
@@ -62,9 +67,9 @@ public enum ExceptionEnum {
      * @return
      */
     public static ExceptionEnum getEnumByCode(String code) {
-        for (ExceptionEnum ExceptionEnum : ExceptionEnum.values()) {
-            if (ExceptionEnum.errorCode.equals(code)) {
-                return ExceptionEnum;
+        for (ExceptionEnum exceptionEnum : ExceptionEnum.values()) {
+            if (exceptionEnum.errorCode.equals(code)) {
+                return exceptionEnum;
             }
         }
         return null;

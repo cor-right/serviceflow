@@ -4,21 +4,17 @@ import me.jiaxu.serviceflow.annotation.In;
 import me.jiaxu.serviceflow.annotation.Out;
 import me.jiaxu.serviceflow.annotation.Publish;
 import me.jiaxu.serviceflow.annotation.Subscribe;
-import me.jiaxu.serviceflow.common.util.ArrayUtils;
+import me.jiaxu.serviceflow.common.enums.CommonExceptionEnum;
 import me.jiaxu.serviceflow.common.util.CollectionUtils;
+import me.jiaxu.serviceflow.model.exception.ServiceFlowEngineCommonException;
 import me.jiaxu.serviceflow.model.exception.ServiceFlowEngineRuntimeException;
 import me.jiaxu.serviceflow.model.exception.ServiceFlowEngineStartException;
-import me.jiaxu.serviceflow.common.ExceptionEnum;
+import me.jiaxu.serviceflow.common.enums.ExceptionEnum;
 import me.jiaxu.serviceflow.common.constant.LoggerConstants;
 import me.jiaxu.serviceflow.common.util.LoggerUtils;
 import me.jiaxu.serviceflow.model.DecorateField;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
 import org.springframework.stereotype.Component;
 
 import java.lang.annotation.Annotation;
@@ -44,8 +40,7 @@ public class SpringServiceFlowStarterWithOrderManager<T, R>
     private ExceptionHandler    exceptionHandler;
 
     /** application context */
-    @Autowired
-    private SpringContext springContext;
+    @Autowired private SpringContext springContext;
 
     /** request */
     private T request;
@@ -70,11 +65,11 @@ public class SpringServiceFlowStarterWithOrderManager<T, R>
             }
 
             // 配置工作流程
-
-            List<ServiceUnit> serviceUnits = manager.serviceUnitsOrderList()
-                    .stream()
-                    .map(springContext::getServiceUnit)
-                    .collect(Collectors.toList());
+            List<ServiceUnit> serviceUnits = new ArrayList<>();
+            for (String s : manager.serviceUnitsOrderList()) {
+                ServiceUnit serviceUnit = springContext.getServiceUnit(s);
+                serviceUnits.add(serviceUnit);
+            }
             Map<String, ServiceUnit> serviceUnitsMap = serviceUnits
                     .stream()
                     .collect(Collectors.toMap(unit -> unit.getClass().getName(), Function.identity()));
@@ -91,12 +86,13 @@ public class SpringServiceFlowStarterWithOrderManager<T, R>
             }
 
 
-
-        } catch (ServiceFlowEngineRuntimeException sre) {
-            // 非用户定义的 workunit 异常
+        } catch (ServiceFlowEngineRuntimeException  sre) {
             LoggerUtils.error(LoggerConstants.ENGINE_RUN_LOGGER, sre);
 
-        } catch (Exception e) {
+        } catch(ServiceFlowEngineCommonException sce) {
+            LoggerUtils.error(LoggerConstants.ENGINE_RUN_LOGGER, sce);
+
+        }catch (Exception e) {
             // 用户定义的 workunit 的异常，优先用 exceptioHandler 处理，否则直接 throw
             if (exceptionHandler != null) {
                 exceptionHandler.process(e);
@@ -118,7 +114,7 @@ public class SpringServiceFlowStarterWithOrderManager<T, R>
      * @throws Exception
      */
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         LoggerUtils.debug(LoggerConstants.ENGINE_START_LOGGER, "引擎初始化开始...");
 
         try {
@@ -130,21 +126,34 @@ public class SpringServiceFlowStarterWithOrderManager<T, R>
 
             LoggerUtils.debug(LoggerConstants.ENGINE_START_LOGGER,
                     "获取工作流流程定义对象成功，流程定义对象共有 %d 个.", beansForType.keySet().size());
-            beansForType.keySet().forEach(beanName -> LoggerUtils.debug(LoggerConstants.ENGINE_START_LOGGER, beanName));
-
-            LoggerUtils.debug(LoggerConstants.ENGINE_START_LOGGER, "开始校验流程定义对象.");
+            LoggerUtils.debug(LoggerConstants.ENGINE_START_LOGGER, "{");
+            beansForType.values().forEach(bean
+                    -> LoggerUtils.debug(LoggerConstants.ENGINE_START_LOGGER, "\t" + bean.getClass().getName()));
+            LoggerUtils.debug(LoggerConstants.ENGINE_START_LOGGER, "}");
 
             // 校验每个工作流流程
             for (FlowOrderManager flow : beansForType.values()) {
+                LoggerUtils.debug(LoggerConstants.ENGINE_START_LOGGER, "");
+                LoggerUtils.debug(LoggerConstants.ENGINE_START_LOGGER,
+                        "---- 开始校验流程定义对象. %s", flow.getClass().getName());
+                LoggerUtils.debug(LoggerConstants.ENGINE_START_LOGGER, "{");
 
                 // 获取 bean
-                List<ServiceUnit> unitList = flow.serviceUnitsOrderList().stream()
-                        .map(springContext::getServiceUnit)
-                        .collect(Collectors.toList());
+                List<ServiceUnit> unitList = new ArrayList<>();
+                for (String s : flow.serviceUnitsOrderList()) {
+                    ServiceUnit serviceUnit = null;
+                    try {
+                         serviceUnit = springContext.getServiceUnit(s);
 
-                // 存在 Null 元素证明有bean 获取不成功
-                if (CollectionUtils.containsNull(unitList)) {
-                    throw new ServiceFlowEngineStartException(ExceptionEnum.MISSED_SERVICE_UNIT);
+                         LoggerUtils.debug(LoggerConstants.ENGINE_START_LOGGER,
+                                 "\tbean对象已存在无需注册: %s" , serviceUnit.getClass().getName());
+                    } catch (ServiceFlowEngineCommonException commonException) {
+                        // 如果是上下文中不存在bean，则进行bean动态注册
+                        if (commonException.getErrorEnum().equals(CommonExceptionEnum.BEAN_NOT_EXIST)) {
+                            serviceUnit = (ServiceUnit) springContext.registryBean(s);
+                        }
+                    }
+                    unitList.add(serviceUnit);
                 }
 
                 // 校验发布和订阅的关系 及 out的唯一性和必要性
@@ -156,7 +165,7 @@ public class SpringServiceFlowStarterWithOrderManager<T, R>
 
                     if (fields.length == 0) {
                         LoggerUtils.debug(LoggerConstants.ENGINE_START_LOGGER,
-                                "流程 %s 中服务单元 %50s 校验通过，该单元中不存在成员变量",
+                                "\t流程 %s 中服务单元 %50s 校验通过，该单元中不存在成员变量",
                                 flow.getClass().getName(), unit.getClass().getName());
                         continue;
                     }
@@ -176,7 +185,7 @@ public class SpringServiceFlowStarterWithOrderManager<T, R>
                         }
                         if (annotationList.size() == 0) {
                             LoggerUtils.debug(LoggerConstants.ENGINE_START_LOGGER,
-                                    "流程 %s 中服务单元 %50s 校验通过，该单元中不存在需要检查的成员变量",
+                                    "\t流程 %s 中服务单元 %50s 校验通过，该单元中不存在需要检查的成员变量",
                                     flow.getClass().getName(), unit.getClass().getName());
                             continue;
                         }
@@ -202,8 +211,9 @@ public class SpringServiceFlowStarterWithOrderManager<T, R>
                         }
 
                         LoggerUtils.debug(LoggerConstants.ENGINE_START_LOGGER,
-                                "流程 %s 中服务单元 %50s 校验通过.", flow.getClass().getName(), unit.getClass().getName());
+                                "\t流程 %s 中服务单元 %50s 校验通过.", flow.getClass().getName(), unit.getClass().getName());
                     }
+
                 }
 
                 // 校验：必须有 @Out
@@ -214,8 +224,9 @@ public class SpringServiceFlowStarterWithOrderManager<T, R>
                 // 校验通过，加入属性中
                 allFlowOrderManagerMap.put(flow.getClass().getName(), flow);
 
+                LoggerUtils.debug(LoggerConstants.ENGINE_START_LOGGER, "}");
                 LoggerUtils.debug(LoggerConstants.ENGINE_START_LOGGER,
-                        "流程定义对象 %s 校验通过.", flow.getClass().getName());
+                        "流程定义对象校验通过: %s", flow.getClass().getName());
             }
 
         } catch (ServiceFlowEngineStartException ese) {
