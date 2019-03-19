@@ -11,7 +11,7 @@ import me.jiaxu.serviceflow.annotation.In;
  */
 public class ItemValidate implements ServiceUnit {
 
-    @In private BaseRequest baseRequest;
+    @In private BaseRequest request;
 
 
     @Override

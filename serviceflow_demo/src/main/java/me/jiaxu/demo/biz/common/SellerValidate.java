@@ -10,7 +10,7 @@ import me.jiaxu.serviceflow.annotation.In;
  */
 public class SellerValidate implements ServiceUnit {
 
-    @In private BaseRequest baseRequest;
+    @In private BaseRequest request;
 
     @Override
     public void before() {
