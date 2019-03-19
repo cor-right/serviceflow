@@ -8,6 +8,11 @@ package me.jiaxu.serviceflow;
  */
 public interface ExceptionHandler {
 
+    /**
+     * 用户的异常处理逻辑在这里
+     *
+     * @param ex
+     */
     void process(Exception ex);
 
 }

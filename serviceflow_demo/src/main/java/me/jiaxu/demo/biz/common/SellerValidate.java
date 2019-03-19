@@ -1,6 +1,8 @@
 package me.jiaxu.demo.biz.common;
 
+import me.jiaxu.demo.model.BaseRequest;
 import me.jiaxu.serviceflow.ServiceUnit;
+import me.jiaxu.serviceflow.annotation.In;
 
 /**
  * Created by jiaxu.zjx on 2019/3/18
@@ -8,6 +10,7 @@ import me.jiaxu.serviceflow.ServiceUnit;
  */
 public class SellerValidate implements ServiceUnit {
 
+    @In private BaseRequest baseRequest;
 
     @Override
     public void before() {

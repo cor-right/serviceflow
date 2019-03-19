@@ -1,18 +1,11 @@
 package me.jiaxu.serviceflow;
 
-import me.jiaxu.serviceflow.annotation.In;
-import me.jiaxu.serviceflow.annotation.Subscribe;
 import me.jiaxu.serviceflow.common.enums.CommonExceptionEnum;
-import me.jiaxu.serviceflow.common.enums.ExceptionEnum;
 import me.jiaxu.serviceflow.common.constant.LoggerConstants;
 import me.jiaxu.serviceflow.common.util.LoggerUtils;
-import me.jiaxu.serviceflow.common.util.ReflectUtils;
-import me.jiaxu.serviceflow.model.DecorateField;
 import me.jiaxu.serviceflow.model.exception.ServiceFlowEngineCommonException;
-import me.jiaxu.serviceflow.model.exception.ServiceFlowEngineStartException;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
@@ -21,7 +14,6 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 
@@ -33,6 +25,7 @@ import java.util.Optional;
 @Component
 public class SpringContext implements ApplicationContextAware {
 
+    /** spring context */
     private ApplicationContext applicationContext;
 
 
@@ -85,7 +78,6 @@ public class SpringContext implements ApplicationContextAware {
      *
      * @param name 被注册的类的全限定名
      */
-//    public void registryBean(String name, Map<String, DecorateField> publishMap, Object request) throws ServiceFlowEngineStartException {
     public Object registryBean(String name) throws ServiceFlowEngineCommonException {
         // 获得 factory
         ConfigurableApplicationContext configContext = (ConfigurableApplicationContext)applicationContext;
@@ -103,27 +95,6 @@ public class SpringContext implements ApplicationContextAware {
         BeanDefinitionBuilder builder = Optional.ofNullable(type)
                 .map(BeanDefinitionBuilder::genericBeanDefinition)
                 .orElseThrow(() -> new ServiceFlowEngineCommonException(CommonExceptionEnum.CLASS_NOT_EXIST));
-
-        // 获取类中需要处理的成员变量， 需要设置的成员变量的属性包括 @In @Subscribe 和 @Autowried
-//        Arrays
-//                .stream(type.getFields())
-//                .forEach(field -> {
-//                    String fieldName = field.getName();
-//
-//                    // In 代表该属性的值应该是 request
-//                    if (ReflectUtils.containsAnnotation(field, In.class)) {
-//                        builder.addPropertyValue(fieldName, request);
-//                    }
-//                    // subscribe 的值应该去引擎内部图中寻找
-//                    else if (ReflectUtils.containsAnnotation(field, Subscribe.class)) {
-//                        Object bean = publishMap.get(fieldName).getValue();
-//                        builder.addPropertyValue(fieldName, bean);
-//                    }
-//                    // 自动注入的应该去 spring 容器中寻找
-//                    else if (ReflectUtils.containsAnnotation(field, Autowired.class)) {
-//                        builder.addPropertyReference(fieldName, fieldName);
-//                    }
-//                });
 
         //  必须设置 bean 为原型模式
         builder.setScope(ConfigurableBeanFactory.SCOPE_PROTOTYPE);

@@ -30,8 +30,7 @@ import java.util.stream.Collectors;
  *     为了防止spring的单例模式产生不可控的影响，该工作流内部全都使用手动的原型模式
  */
 @Component
-public class SpringServiceFlowStarterWithOrderManager<T, R>
-        implements ServiceFlowStarter<T, R>, InitializingBean {
+public class SpringServiceFlowStarterWithOrderManager<T, R> implements ServiceFlowStarter<T, R>, InitializingBean {
 
     /** 模型约束规则 */
     private String              domainConstraintRule;
@@ -40,7 +39,12 @@ public class SpringServiceFlowStarterWithOrderManager<T, R>
     private ExceptionHandler    exceptionHandler;
 
     /** application context */
-    @Autowired private SpringContext springContext;
+    @Autowired
+    private SpringContext springContext;
+
+    /** tools */
+    @Autowired
+    private ServiceFlowTools serviceFlowTools;
 
     /** request */
     private T request;
@@ -53,6 +57,24 @@ public class SpringServiceFlowStarterWithOrderManager<T, R>
 
     private Map<String, DecorateField> publishMap = new HashMap<>();
 
+    @Override
+    public void setDomainConstraintRule(String rule) {
+
+    }
+
+    @Override
+    public void setExceptionHandler(ExceptionHandler exceptionHandler) {
+
+    }
+
+    /**
+     * 启动方法
+     *
+     * @param request
+     * @param manager 工作流流程定义实现类
+     * @return response
+     * @throws Exception
+     */
     @Override
     public R apply(T request, FlowOrderManager manager) throws Exception {
         long startTime = new Date().getTime();
@@ -102,6 +124,7 @@ public class SpringServiceFlowStarterWithOrderManager<T, R>
 
         } finally {
             long spentTime = new Date().getTime() - startTime;
+            LoggerUtils.info(LoggerConstants.ENGINE_RUN_LOGGER, "业务执行时间: " + spentTime);
         }
 
         return response;
@@ -161,6 +184,11 @@ public class SpringServiceFlowStarterWithOrderManager<T, R>
                 boolean containsOut = false;
 
                 for (ServiceUnit unit : unitList) {
+                    List<String> inList  = new ArrayList<>();
+                    List<String> outList = new ArrayList<>();
+                    List<String> subscribeList = new ArrayList<>();
+                    List<String> publishList   = new ArrayList<>();
+
                     Field[] fields = unit.getClass().getDeclaredFields();
 
                     if (fields.length == 0) {
@@ -191,13 +219,22 @@ public class SpringServiceFlowStarterWithOrderManager<T, R>
                         }
                         Annotation annotation = annotationList.get(0);
 
+                        if (annotation instanceof In) {
+                            inList.add(field.getName());
+                        }
+
                         // 校验：被 @Subscribe 的 field 必须已经 @Publish
-                        if (annotation instanceof Subscribe
-                                && !CollectionUtils.contains(publishedFiled, field.get(unit))) {
-                            throw new ServiceFlowEngineStartException(ExceptionEnum.SUBSCRIBE_BEFORE_PUBLISH);
+                        if (annotation instanceof Subscribe) {
+                            subscribeList.add(field.getName());
+
+                            if (!CollectionUtils.contains(publishedFiled, field.get(unit))) {
+                                throw new ServiceFlowEngineStartException(ExceptionEnum.SUBSCRIBE_BEFORE_PUBLISH);
+                            }
                         }
 
                         if (annotation instanceof Publish) {
+                            publishList.add(field.getName());
+
                             publishedFiled.add(field.get(unit));
                         }
 
@@ -206,6 +243,8 @@ public class SpringServiceFlowStarterWithOrderManager<T, R>
                             if (containsOut) {
                                 throw new ServiceFlowEngineStartException(ExceptionEnum.DUPLICATE_OUT);
                             } else {
+                                outList.add(field.getName());
+
                                 containsOut = true;
                             }
                         }
@@ -214,6 +253,10 @@ public class SpringServiceFlowStarterWithOrderManager<T, R>
                                 "\t流程 %s 中服务单元 %50s 校验通过.", flow.getClass().getName(), unit.getClass().getName());
                     }
 
+                    serviceFlowTools.getInMap().put(unit, inList);
+                    serviceFlowTools.getOutMap().put(unit, outList);
+                    serviceFlowTools.getPublishMap().put(unit, publishList);
+                    serviceFlowTools.getSubscribeMap().put(unit, subscribeList);
                 }
 
                 // 校验：必须有 @Out
@@ -227,8 +270,12 @@ public class SpringServiceFlowStarterWithOrderManager<T, R>
                 LoggerUtils.debug(LoggerConstants.ENGINE_START_LOGGER, "}");
                 LoggerUtils.debug(LoggerConstants.ENGINE_START_LOGGER,
                         "流程定义对象校验通过: %s", flow.getClass().getName());
-            }
 
+                // 关联关系存到 tools 中一份，方便后续使用
+
+                serviceFlowTools.getServiceUnitMap().put(flow.getClass().getName(), unitList);
+                serviceFlowTools.getFlowManagerList().add(flow);
+            }
         } catch (ServiceFlowEngineStartException ese) {
             LoggerUtils.error(LoggerConstants.ENGINE_START_LOGGER, ese);
 

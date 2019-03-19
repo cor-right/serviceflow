@@ -3,6 +3,7 @@ package me.jiaxu.serviceflow.common.util;
 import org.springframework.lang.Nullable;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 
@@ -29,6 +30,28 @@ public class CollectionUtils {
 
     public static boolean isEmpty(@Nullable Map<?, ?> map) {
         return org.springframework.util.CollectionUtils.isEmpty(map);
+    }
+
+    /**
+     * 获取列表中的元素
+     *
+     * 不会NPE，不会 indexOutOfRange
+     *
+     * @param list
+     * @param index
+     * @param <T>
+     * @return
+     */
+    public static <T> T getListElemSafely(List<T> list, int index) {
+        // npe
+        if (list == null) {
+            return null;
+        }
+        // index out of range
+        if (list.size() < index + 1) {
+            return null;
+        }
+        return list.get(index);
     }
 
 }

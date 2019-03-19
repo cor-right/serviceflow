@@ -12,7 +12,7 @@ public interface FlowOrderManager {
     /**
      * 进行工作流流程的定义，列表中的字符串为 工作单元实现类 的 全限定名
      *
-     * @return
+     * @return 流程定义
      */
     List<String> serviceUnitsOrderList();
 

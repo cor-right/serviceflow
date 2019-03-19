@@ -14,9 +14,14 @@ public interface ServiceFlowStarter<T, R> {
      *
      * @param rule 规则
      */
-    default void setDomainConstraintRule(String rule) {
+    void setDomainConstraintRule(String rule);
 
-    }
+    /**
+     * 设定用户业务异常处理器
+     *
+     * @param exceptionHandler
+     */
+    void setExceptionHandler(ExceptionHandler exceptionHandler);
 
     /**
      * 启动方法
