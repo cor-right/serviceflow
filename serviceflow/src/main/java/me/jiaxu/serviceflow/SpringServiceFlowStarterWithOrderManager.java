@@ -55,6 +55,7 @@ public class SpringServiceFlowStarterWithOrderManager<T, R> implements ServiceFl
     /** 工作流流程定义 */
     private Map<String, FlowOrderManager> allFlowOrderManagerMap = new HashMap<>();
 
+    /** \@Publish 的 Field 的存储位置 */
     private Map<String, DecorateField> publishMap = new HashMap<>();
 
     @Override
@@ -124,7 +125,7 @@ public class SpringServiceFlowStarterWithOrderManager<T, R> implements ServiceFl
 
         } finally {
             long spentTime = new Date().getTime() - startTime;
-            LoggerUtils.info(LoggerConstants.ENGINE_RUN_LOGGER, "业务执行时间: " + spentTime);
+            LoggerUtils.info(LoggerConstants.ENGINE_RUN_LOGGER, "业务执行时间: " + spentTime + "ms");
         }
 
         return response;
@@ -316,9 +317,6 @@ public class SpringServiceFlowStarterWithOrderManager<T, R> implements ServiceFl
                     }
                 } catch (IllegalAccessException iae) {
                     throw new ServiceFlowEngineRuntimeException();
-
-                } catch (ServiceFlowEngineRuntimeException sfe) {
-                    throw sfe;
                 }
 
             }
