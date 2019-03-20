@@ -48,10 +48,18 @@ public class ServiceFlowTools {
                 "    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />" +
                 "    <title>Micro-Service Workflow Service Units\' Relation Map</title>" +
                 "    <style type=\"text/css\">" +
-                "    table tr td{" +
-//                "        border: 1px solid #c0c0c0;" +
-                "        font-family: Courier New;" +
-                "    }" +
+                "            table, th , td  {" +
+                "              border: 1px solid grey;" +
+                "              font-family: Sitka Text;     " +
+                "              border-collapse: collapse;" +
+                "              padding: 5px;" +
+                "            }" +
+                "            table tr:nth-child(odd) {" +
+                "              background-color: #f1f1f1;" +
+                "            }" +
+                "            table tr:nth-child(even) {" +
+                "              background-color: #ffffff;" +
+                "            }" +
                 "    </style>" +
                 "</head>" +
                 "<body>";
@@ -59,12 +67,12 @@ public class ServiceFlowTools {
         StringBuilder table = new StringBuilder();
         for (FlowOrderManager flow : flowManagerList) {
             String flowName = flow.getClass().getName();
-            table.append("<table><tr>");
+            table.append("<table  width=\"80%\" align=\"center\"><tr style='background-color: #f1f1f1;s'>");
             // 添加表头
             table.append("<td colspan=\"5\"><b>FlowOrderManager: ")
                     .append(flowName)
                     .append("</b></td></tr>")
-                    .append("    <tr>")
+                    .append("    <tr style='background-color: #ffffff;'>")
                     .append("        <td><b>ServiceUnit</b></td>")
                     .append("        <td><b>In</b></td>")
                     .append("        <td><b>Subscribe</b></td>")
@@ -75,6 +83,8 @@ public class ServiceFlowTools {
 
             // 添加每个 serviceunit 的关联关系
             List<ServiceUnit> serviceUnitList = serviceUnitMap.get(flowName);
+            int realRowNum = 0;
+
             for (ServiceUnit serviceUnit : serviceUnitList) {
                 List<String> inList         = inMap.get(serviceUnit);
                 List<String> outList        = outMap.get(serviceUnit);
@@ -89,23 +99,34 @@ public class ServiceFlowTools {
                         .get();
 
                 for (int i = 0; i < rowNum; i++) {
+
+
+                    String tr = ++realRowNum % 2 == 0?
+                            "<tr onmouseover=\"this.style.backgroundColor='#ffff66'\"; onmouseout=\"this.style.backgroundColor='#f1f1f1';\">":
+                            "<tr onmouseover=\"this.style.backgroundColor='#ffff66'\"; onmouseout=\"this.style.backgroundColor='#ffffff';\">";
+                    table.append(tr);
+
                     if (i == 0) {
-                        table.append("<tr>" + "<td>" + serviceUnit.getClass().getName() + "</td>");
+                        table
+                                .append("<td>")
+                                .append(serviceUnit.getClass().getName())
+                                .append("</td>");
 
                         String in = CollectionUtils.getListElemSafely(inList, 0);
                         String out = CollectionUtils.getListElemSafely(outList, 0);
                         String subscribe = CollectionUtils.getListElemSafely(subscribeList, 0);
                         String publish = CollectionUtils.getListElemSafely(publishList, 0);
 
-                        table.append(in == null ?
-                                "<td style=\"border: 0px\"></td>" : "<td>" + in + "</td>");
-                        table.append(subscribe == null ?
-                                "<td style=\"border: 0px\"></td>" : "<td>" + subscribe + "</td>");
-                        table.append(publish == null ?
-                                "<td style=\"border: 0px\"></td>" : "<td>" + publish + "</td>");
-                        table.append(out == null ?
-                                "<td style=\"border: 0px\"></td>" : "<td>" + out + "</td>");
-                        table.append("</tr>");
+                        table
+                                .append(in == null ?
+                                        "<td style=\"border: 0px\"></td>" : "<td>" + in + "</td>")
+                                .append(subscribe == null ?
+                                        "<td style=\"border: 0px\"></td>" : "<td>" + subscribe + "</td>")
+                                .append(publish == null ?
+                                        "<td style=\"border: 0px\"></td>" : "<td>" + publish + "</td>")
+                                .append(out == null ?
+                                        "<td style=\"border: 0px\"></td>" : "<td>" + out + "</td>")
+                                .append("</tr>");
                         continue;
                     }
 
@@ -114,8 +135,7 @@ public class ServiceFlowTools {
                     String subscribe = CollectionUtils.getListElemSafely(subscribeList, i);
                     String publish = CollectionUtils.getListElemSafely(publishList, i);
 
-                    table.append(
-                            "<tr><td style=\"border: 0px\"></td>");
+                    table.append("<td style=\"border: 0px\"></td>");
                     table.append(in == null ?
                             "<td style=\"border: 0px\"></td>" : "<td>" + in + "</td>");
                     table.append(subscribe == null ?

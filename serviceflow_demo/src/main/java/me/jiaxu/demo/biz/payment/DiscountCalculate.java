@@ -11,7 +11,7 @@ import me.jiaxu.serviceflow.annotation.Publish;
  */
 public class DiscountCalculate implements ServiceUnit {
 
-    @In private BaseRequest baseRequest;
+    @In private BaseRequest request;
 
     @Publish private Object discountModel;
 
@@ -27,6 +27,6 @@ public class DiscountCalculate implements ServiceUnit {
 
     @Override
     public void process() {
-
+        System.out.println(this.getClass().getName());
     }
 }

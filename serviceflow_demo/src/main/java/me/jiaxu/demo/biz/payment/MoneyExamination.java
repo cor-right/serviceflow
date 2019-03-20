@@ -11,7 +11,7 @@ import me.jiaxu.serviceflow.annotation.Subscribe;
  */
 public class MoneyExamination implements ServiceUnit {
 
-    @In private BaseRequest baseRequest;
+    @In private BaseRequest request;
 
     @Subscribe private Object discountModel;
 
@@ -29,6 +29,6 @@ public class MoneyExamination implements ServiceUnit {
 
     @Override
     public void process() {
-
+        System.out.println(this.getClass().getName());
     }
 }
